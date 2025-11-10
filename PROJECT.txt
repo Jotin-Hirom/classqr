@@ -1,0 +1,49 @@
+Backend run:
+ - cd backend
+ - npm src/server.js 
+  or
+ - npx nodemon src/server.js
+  or
+  - npm run dev
+
+FrontEnd run:
+ - Go to run
+ - Select start debugging
+
+
+ Creating multiple at a time:
+    mkdir src/config, src/controllers, src/routes, src/utils
+    ni src/config/db.js, src/controllers/authController.js, src/routes/authRoutes.js, src/utils/jwt.js, src/utils/mailer.js -ItemType File
+
+        Explanation:
+
+        mkdir (or New-Item -ItemType Directory) creates multiple folders separated by commas.
+        ni (short for New-Item) creates files.
+        -ItemType File ensures they are empty files.
+
+
+
+powershell: Remove-Item -Recurse -Force .git
+Explanation:
+
+-Recurse → removes everything inside the .git folder
+
+-Force → deletes hidden items without prompting
+
+.git → the hidden folder that stores Git history
+
+After that, you can reinitialize Git cleanly:
+
+git init
+git add .
+git commit -m "Restart project from scratch"
+git remote add origin https://github.com/<your-username>/<repo-name>.git
+git branch -M main
+git push --force origin main
+
+
+If you only want to remove sensitive data or files from the current repo and push again, do this:
+
+git rm --cached local.env
+git commit -m "Remove local.env from repo"
+git push
