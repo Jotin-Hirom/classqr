@@ -12,7 +12,7 @@ export class UserModel {
     }
 
     static async getUserByEmail(email) {
-        const q = "SELECT * FROM users WHERE email = $1";
+        const q = "SELECT * FROM users WHERE email = $1 LIMIT 1";
         const { rows } = await pool.query(q, [email]);
         return rows[0];
     }
@@ -36,7 +36,7 @@ export class UserModel {
 
     static async updateUser(user_id, updates) {
         const fields = [];
-        const values = [];
+        const values = []; 
         let paramIndex = 1;
 
         if (updates.email !== undefined) {

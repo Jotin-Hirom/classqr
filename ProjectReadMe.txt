@@ -1,14 +1,19 @@
 Backend run:
- - cd backend
- - npm src/server.js 
+- cd backend
+- npm src/server.js 
   or
- - npx nodemon src/server.js
+- npx nodemon src/server.js
   or
-  - npm run dev
+- npm run dev
 
 FrontEnd run:
- - Go to run
- - Select start debugging
+cd frontend
+flutter run -d chrome
+
+or
+
+- Go to run
+- Select start debugging
 
 
 //Import difference
@@ -36,7 +41,7 @@ local.env holds your personal settings.
 | config/          | Testing database                        |
 | schema/          | Database Schema                         |
 
-
+Backend:
 /src
  ├── config
  │    ├── initdb.js
@@ -113,6 +118,140 @@ local.env holds your personal settings.
  ├── app.js
  ├── server.js
  └── package.json
+
+FrontEnd:
+ /lib
+├── main.dart
+├── app.dart                         # MaterialApp, routes, theme, navigation
+│
+├── core/
+│   ├── config/
+│   │    └── env.dart                # Base URLs, env variables
+│   │
+│   ├── constants/
+│   │    ├── colors.dart
+│   │    ├── text_styles.dart
+│   │    ├── app_padding.dart
+│   │    ├── api_endpoints.dart
+│   │    └── assets.dart
+│   │
+│   ├── utils/
+│   │    ├── validators.dart         # All validation rules (roll, password…)
+│   │    ├── extensions.dart
+│   │    ├── helpers.dart
+│   │    ├── device_fingerprint.dart
+│   │    └── secure_storage.dart     # For tokens if needed
+│   │
+│   ├── services/
+│   │    ├── api_service.dart        # Core HTTP client
+│   │    ├── auth_service.dart
+│   │    ├── student_service.dart
+│   │    ├── teacher_service.dart
+│   │    ├── course_service.dart
+│   │    ├── attendance_service.dart
+│   │    ├── qr_service.dart
+│   │    └── admin_service.dart
+│   │
+│   └── errors/
+│        ├── api_error.dart
+│        ├── exception_handler.dart
+│        └── error_messages.dart
+│
+├── models/
+│   ├── user.dart
+│   ├── student.dart
+│   ├── teacher.dart
+│   ├── subject.dart
+│   ├── course.dart
+│   ├── attendance.dart
+│   ├── qr_session.dart
+│   ├── scan_event.dart
+│   ├── admin.dart
+│   └── report.dart
+│
+├── viewmodels/                      # MVVM (logic/controllers)
+│   ├── auth_viewmodel.dart
+│   ├── student_dashboard_viewmodel.dart
+│   ├── teacher_dashboard_viewmodel.dart
+│   ├── course_viewmodel.dart
+│   ├── attendance_viewmodel.dart
+│   ├── scanner_viewmodel.dart
+│   ├── admin_viewmodel.dart
+│   └── profile_viewmodel.dart
+│
+├── providers/                       # Riverpod providers ONLY
+│   ├── auth_provider.dart
+│   ├── user_provider.dart
+│   ├── student_provider.dart
+│   ├── teacher_provider.dart
+│   ├── course_provider.dart
+│   ├── attendance_provider.dart
+│   ├── qr_provider.dart
+│   ├── admin_provider.dart
+│   └── theme_provider.dart
+│
+├── views/                           # UI screens grouped by roles & features
+│   ├── auth/
+│   │    ├── auth_page.dart
+│   │    └── widgets/
+│   │         ├── signup_form.dart
+│   │         ├── signin_form.dart
+│   │         └── forgot_form.dart
+│   │
+│   ├── student/
+│   │    ├── student_dashboard_page.dart
+│   │    ├── attendance_calendar_page.dart
+│   │    ├── attendance_detail_page.dart
+│   │    ├── profile_completion_page.dart
+│   │    └── widgets/
+│   │         ├── attendance_tile.dart
+│   │         └── calendar_cell.dart
+│   │
+│   ├── teacher/
+│   │    ├── teacher_dashboard_page.dart
+│   │    ├── course_list_page.dart
+│   │    ├── course_details_page.dart
+│   │    ├── take_attendance_page.dart
+│   │    ├── add_course_page.dart
+│   │    ├── student_list_page.dart
+│   │    └── widgets/
+│   │         ├── course_card.dart
+│   │         ├── student_row.dart
+│   │         └── attendance_summary_card.dart
+│   │
+│   ├── qr/
+│   │    ├── qr_scanner_page.dart
+│   │    └── qr_display_page.dart       # Teacher's QR generator page
+│   │
+│   ├── admin/
+│   │    ├── admin_dashboard_page.dart
+│   │    ├── user_list_page.dart
+│   │    ├── system_logs_page.dart
+│   │    ├── ml_anomaly_page.dart
+│   │    └── widgets/
+│   │         ├── admin_card.dart
+│   │         └── log_tile.dart
+│   │
+│   └── common/
+│        ├── splash_page.dart
+│        ├── home_selector_page.dart    # Selects student/teacher/admin dashboard
+│        ├── error_page.dart
+│        ├── loading_page.dart
+│        └── no_data.dart
+│
+├── widgets/
+│   ├── m3_input_field.dart
+│   ├── primary_button.dart
+│   ├── card_tile.dart
+│   ├── app_logo.dart
+│   ├── snackbars.dart
+│   ├── empty_state.dart
+│   ├── loading_indicator.dart
+│   └── dialog_box.dart
+│
+└── theme/
+    ├── theme.dart                    # Material 3 theme (light/dark)
+    └── palette.dart                  # Extended colors
 
 
 # Use this command for creating folders with files at same time :
@@ -264,3 +403,14 @@ This is **token rotation** (strongest security).
 
 Error:Invalid character in header content ["Host"]
 This always happens when your URL contains spaces, line breaks, or illegal characters.
+
+
+
+FRONTEND :
+
+Failed to Hot Restart: DebugAdapterException: Invalid argument(s): Uri org-dartlang-app:/web_plugin_registrant.dart must have scheme 'file:'.
+Fixed by: 
+flutter clean
+flutter pub get
+flutter clean
+flutter pub get

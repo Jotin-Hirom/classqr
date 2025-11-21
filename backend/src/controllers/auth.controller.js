@@ -13,6 +13,11 @@ import bcrypt from "bcryptjs";
 // Registration controller
 import { createStudentUser, createTeacherUser } from "../services/auth.service.js";
 
+import env from "dotenv";
+env.config();
+
+const COOKIE_NAME = process.env.REFRESH_COOKIE_NAME || "refreshToken";
+
 /**
  * Register user (student or teacher)
  * Expects JSON body with "role" field.
@@ -47,9 +52,9 @@ export const login = async (req, res) => {
     // Basic validation for user to login
     if (!email || !password) return res.status(400).json({ error: "Email and password required" });
     // Authenticate user (from service)
-    const {cookiesName, accessToken, tokenReceived, user, cookieOptions } = await loginUser({ email, password });
+    const {COOKIE_NAME, accessToken, tokenReceived, user, cookieOptions } = await loginUser({ email, password });
     // set httpOnly cookie with raw refresh token
-    res.cookie(cookiesName, tokenReceived, cookieOptions);
+    res.cookie(COOKIE_NAME, tokenReceived, cookieOptions);
     res.json({ success: true, accessToken, user });
   } catch (err) {
     res.status(401).json({ success: false, message: err.message });
@@ -59,7 +64,7 @@ export const login = async (req, res) => {
 // Refresh token controller
 export const refreshToken = async (req, res, next) => {
   try {
-    const token = req.cookies?.refreshToken || req.body?.refreshToken;
+    const token = req.cookies?.[COOKIE_NAME] || req.body?.[COOKIE_NAME];
     if (!token) return res.status(401).json({ error: "Refresh token missing" });
 
     // verify signature
@@ -107,7 +112,7 @@ export const refreshToken = async (req, res, next) => {
     });
 
     // Set cookie
-    res.cookie("refreshToken", newRefreshToken, {
+    res.cookie(COOKIE_NAME, newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",
@@ -125,7 +130,7 @@ export const refreshToken = async (req, res, next) => {
 
 // Logout controller
 export const logoutUser = async (req, res, next) => {
-  console.log(req.cookies);
+  console.log(req.body);
   try {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
@@ -134,14 +139,12 @@ export const logoutUser = async (req, res, next) => {
       try {
         payload = verifyRefreshToken(refreshToken);
         // Revoke all refresh tokens for this user
-        // await revokeAllUserRefreshTokens(payload.sub);
+        await revokeRefreshTokenByHash(payload.sub);
       } catch (e) {
         // ignore invalid token — just clear cookie
       }
     }
-    console.log(cookiesName);
-
-    res.clearCookie(cookiesName, {
+    res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",
@@ -184,7 +187,7 @@ export const logoutAllDevices = async (req, res, next) => {
     await revokeAllUserRefreshTokens(userId);
 
     // Clear cookie on client
-    res.clearCookie(cookiesName, {
+    res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "Strict",
@@ -203,59 +206,59 @@ export const logoutAllDevices = async (req, res, next) => {
 
 
 
-
+ 
 
 // Me controller
-export const me = async (req, res, next) => {
-  try {
-    const userId = req.user.user_id;   // added by verifyToken middleware
-    const role = req.user.role;
+// export const me = async (req, res, next) => {
+//   try {
+//     const userId = req.user.user_id;   // added by verifyToken middleware
+//     const role = req.user.role;
 
-    // 1. Fetch base user info
-    const userQuery = `
-      SELECT user_id, email, role, created_at
-      FROM users
-      WHERE user_id = $1
-      LIMIT 1
-    `;
-    const userRes = await pool.query(userQuery, [userId]);
-    const user = userRes.rows[0];
-    if (!user) return res.status(404).json({ error: "User not found" });
+//     // 1. Fetch base user info
+//     const userQuery = `
+//       SELECT user_id, email, role, created_at
+//       FROM users
+//       WHERE user_id = $1
+//       LIMIT 1
+//     `;
+//     const userRes = await pool.query(userQuery, [userId]);
+//     const user = userRes.rows[0];
+//     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // 2. Load profile based on role
-    let profile = null;
+//     // 2. Load profile based on role
+//     let profile = null;
 
-    if (role === "student") {
-      const q = `
-        SELECT user_id, roll_no, sname, semester, programme, batch, photo_url
-        FROM students
-        WHERE user_id = $1
-        LIMIT 1
-      `;
-      const r = await pool.query(q, [userId]);
-      profile = r.rows[0] || {};
-    }
+//     if (role === "student") {
+//       const q = `
+//         SELECT user_id, roll_no, sname, semester, programme, batch, photo_url
+//         FROM students
+//         WHERE user_id = $1
+//         LIMIT 1
+//       `;
+//       const r = await pool.query(q, [userId]);
+//       profile = r.rows[0] || {};
+//     }
 
-    if (role === "teacher") {
-      const q = `
-        SELECT user_id, abbr, tname, designation, specialization, dept, programme, photo_url
-        FROM teachers
-        WHERE user_id = $1
-        LIMIT 1
-      `;
-      const r = await pool.query(q, [userId]);
-      profile = r.rows[0] || {};
-    }
+//     if (role === "teacher") {
+//       const q = `
+//         SELECT user_id, abbr, tname, designation, specialization, dept, programme, photo_url
+//         FROM teachers
+//         WHERE user_id = $1
+//         LIMIT 1
+//       `;
+//       const r = await pool.query(q, [userId]);
+//       profile = r.rows[0] || {};
+//     }
 
-    // Admins don't have separate profile tables — return basic data only
+//     // Admins don't have separate profile tables — return basic data only
 
-    return res.json({
-      user,
-      profile,
-    });
+//     return res.json({
+//       user,
+//       profile,
+//     });
 
-  } catch (err) {
-    next(err);
-  }
-};
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 

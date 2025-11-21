@@ -27,7 +27,7 @@ export const isValidEmailForRoll = (email, roll) => {
 // semester: integer between 4 and 10 (user requirement)
 export const isValidSemester = (sem) => {
   const n = parseInt(sem, 10);
-  return Number.isInteger(n) && n >= 4 && n <= 10;
+  return Number.isInteger(n) && n >= 1 && n <= 10;
 };
 
 // programme: alphabets and spaces allowed
@@ -55,7 +55,7 @@ export const isValidPassword = (pwd) => {
   return re.test(pwd);
 };
 
-// designation/department: letters, spaces, dots, hyphens allowed
-export const isValidDesignationOrDept = (str) => {
-  return typeof str === "string" && /^[a-z .-]+$/i.test(str.trim());
-};
+// // designation/department: letters, spaces, dots, hyphens allowed
+// export const isValidDesignationOrDept = (str) => {
+//   return typeof str === "string" && /^[a-z .-]+$/i.test(str.trim());
+// };

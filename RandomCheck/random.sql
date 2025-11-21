@@ -192,3 +192,5 @@ JOIN refresh_tokens
 
 // Delete all users from users table
 DELETE FROM users;
+
+alter table teachers drop programme

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { compareSync } from "bcryptjs";
 import pool from "../config/pool.js";
 import { v4 as uuidv4 } from "uuid";
+import { UserModel } from '../models/user.model.js';
 // Validators
 import {
   isValidName,
@@ -11,7 +12,7 @@ import {
   isValidProgramme,
   isValidBatch,
   isValidPassword,
-  isValidDesignationOrDept,
+  // isValidDesignationOrDept,
 } from "../utils/validator.js";
 
 // JWT utils
@@ -56,27 +57,27 @@ const cookiesName = process.env.COOKIE_NAME || "refreshToken";
  * Expects fields: email, password, name (sname), roll_no, semester, programme, batch, photo_url (optional)
  */
 export const createStudentUser = async (payload) => {
-  const emailLower = payload.email.toLowerCase();
-  // Extract roll from email
-  const roll = emailLower.split("@")[0];
-  const {
-    email,
-    password,
-    sname= null,
-    roll_no= null,
-    semester= null,
-    programme= null,
-    batch= null,
-    photo_url = null,
-  } = payload;
+  // const emailLower = payload.email.toLowerCase();
+  // // Extract roll from email
+  // const roll = emailLower.split("@")[0];
+  const email = payload.email.toLowerCase();
+  const semester = parseInt(payload.semester, 10);
+  const batch = parseInt(payload.batch, 10);
+  const sname = payload.sname;
+  const password = payload.password;
+  const roll_no = payload.roll_no;
+  const programme = payload.programme;
+  const photo_url = null; 
+ 
+
 
   // Basic validation
-  // if (!sname || !isValidName(sname)) throwError(400, "Invalid student name");
-  if (!roll || !isValidRoll(roll)) throwError(400, "Invalid roll_no format (3 letters + 5 digits)");
-  if (!email || !isValidEmailForRoll(email, roll)) throwError(400, "Email must be roll_no@tezu.ac.in");
-  // if (!isValidSemester(semester)) throwError(400, "Semester must be an integer between 4 and 10");
-  // if (!programme || !isValidProgramme(programme)) throwError(400, "Invalid programme (alphabets only)");
-  // if (!isValidBatch(batch)) throwError(400, "Invalid batch year");
+  if (!sname || !isValidName(sname)) throwError(400, "Invalid student name");
+  if (!roll_no || !isValidRoll(roll_no)) throwError(400, "Invalid roll_no format (3 letters + 5 digits)");
+  if (!email || !isValidEmailForRoll(email, roll_no)) throwError(400, "Email must be roll_no@tezu.ac.in");
+  if (!isValidSemester(semester)) throwError(400, "Semester must be an integer between 1 and 10");
+  if (!programme || !isValidProgramme(programme)) throwError(400, "Invalid programme (alphabets only)");
+  if (!isValidBatch(batch)) throwError(400, "Invalid batch year");
   if (!password || !isValidPassword(password)) throwError(400, "Password does not meet complexity requirements");
 
   // Hash password
@@ -99,19 +100,17 @@ export const createStudentUser = async (payload) => {
 
     // Insert into students
     const insertStudentText = `
-      INSERT INTO students (user_id, roll_no)
-      VALUES ($1, $2)
+      INSERT INTO students (user_id, roll_no, sname, semester, programme, batch, photo_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING  user_id, roll_no, sname, semester, programme, batch, photo_url
     `;
     const studentRes = await client.query(insertStudentText, [
       user_id,
-      roll.toUpperCase()
+      roll_no.toUpperCase() , sname.toUpperCase(), semester, programme.toUpperCase(), batch, photo_url
     ]);
     const student = studentRes.rows[0];
 
     await client.query("COMMIT");
-
-    // return a minimal user object (no password)
     return {
       user_id: user.user_id,
       email: user.email,
@@ -139,26 +138,23 @@ export const createStudentUser = async (payload) => {
 };
 
 
-/**
+/** 
  * Create teacher user + teacher profile
  * Expects fields: email, password, tname, abbr, designation, specialization (opt), dept, programme (opt), photo_url (opt)
  */
 export const createTeacherUser = async (payload) => {
   const emailLower = payload.email.toLowerCase();
   const Abbr = emailLower.split("@")[0];
-  const {
-    email,
-    password,
-    // tname,
-    // abbr,
-    designation=null,
-    specialization = null,
-    dept=null,
-    programme = null,
-    photo_url = null,
-  } = payload;
-   const tname = Abbr;
-   const abbr = Abbr;
+  const tname = payload.tname;
+  const abbr = Abbr;
+   const email = payload.email;
+   const password = payload.password;
+   const designation = payload.designation;
+   const specialization = payload.specialization;
+   const dept = payload.dept;
+   const photo_url = null;
+
+ 
   // Validation
   if (!tname || !isValidName(tname)) throwError(400, "Invalid teacher name.");
   if (!abbr || typeof abbr !== "string" || abbr.trim().length < 2) throwError(400, "Invalid abbreviation.");
@@ -177,24 +173,23 @@ export const createTeacherUser = async (payload) => {
     const insertUserText = `
       INSERT INTO users (user_id, email, password_hash, role)
       VALUES ($1, $2, $3, 'teacher')
-      RETURNING user_id, email, role, created_at
+      RETURNING user_id, email, role
     `;
     const userRes = await client.query(insertUserText, [user_id, email.toLowerCase(), password_hash]);
     const user = userRes.rows[0];
 
     const insertTeacherText = `
-      INSERT INTO teachers (user_id, abbr, tname, designation, specialization, dept, programme, photo_url)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING user_id, abbr, tname, designation, specialization, dept, programme, photo_url
+      INSERT INTO teachers (user_id, abbr, tname, designation, specialization, dept, photo_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING user_id, abbr, tname, designation, specialization, dept, photo_url
     `;
     const teacherRes = await client.query(insertTeacherText, [
       user.user_id,
       abbr.toUpperCase(),
-      tname,
+      tname.toUpperCase(),
       designation,
       specialization,
       dept,
-      programme,
       photo_url,
     ]);
     const teacher = teacherRes.rows[0];
@@ -223,18 +218,19 @@ export const createTeacherUser = async (payload) => {
     client.release();
   }
 };
-
+ 
 
 // Login user: verify credentials, generate tokens, save refresh token
 export const loginUser = async ({ email, password }) => {
-  const user = await getUserByEmail(email.toLowerCase());
+  const user = await UserModel.getUserByEmail(email.toLowerCase());
+  
   if (!user) return res.status(401).json({ error: "User not found." });
   if (!user.password_hash) return res.status(401).json({ error: "Complete registration via provider" });
   
   const valid = compareSync(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: "Invalid credentials" });
   
-  const ok = await bcrypt.compare(password, user.password_hash);
+  const ok = await bcrypt.compare(password, user.password_hash); 
   if (!ok) throw new Error("Invalid credentials");
 
   // generate tokens
@@ -267,17 +263,6 @@ export const loginUser = async ({ email, password }) => {
       expires_at: expiresAt,
     });
   return { cookiesName, accessToken, tokenReceived: token, user: { userId: user.user_id, role: user.role , email:user.email}, cookieOptions };
-};
-
-
-
-/**
- * Get user by email (returns user row with password_hash)
- */
-export const getUserByEmail = async (email) => {
-  const q = "SELECT user_id, email, password_hash, role FROM users WHERE email = $1 LIMIT 1";
-  const { rows } = await pool.query(q, [email]);
-  return rows[0];
 };
 
 

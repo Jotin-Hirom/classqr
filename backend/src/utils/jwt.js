@@ -27,7 +27,7 @@ export const verifyAccessToken = (token) => {
 // Verify refresh token
 export const verifyRefreshToken = (token) => {
   return jwt.verify(token, REFRESH_SECRET);
-};
+}; 
 
 // Function to hash a token
 export const hashToken = async (token) =>{

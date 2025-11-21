@@ -12,7 +12,7 @@ export const verifyToken = (req, res, next) => {
     req.user = { 
       user_id: payload.sub,
       role: payload.role,
-      email: payload.email, 
+      email: payload.email,  
     };
     return next();
   } catch (err) {

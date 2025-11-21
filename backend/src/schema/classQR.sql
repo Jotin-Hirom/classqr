@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS students (
     semester INT CHECK(semester BETWEEN 1 AND 10),
     programme TEXT ,
     batch INT,
-    photo_url TEXT
+    photo_url TEXT 
 );
 
 -- TEACHERS
@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS teachers (
     designation TEXT,
     specialization TEXT, 
     dept TEXT,
-    programme TEXT,
     photo_url TEXT
 );
 
